@@ -1,31 +1,34 @@
 <div align="center">
 
-```
-        🌲
-       /\  \
-      /  \  \
-     /    \  \
-    /  🟢  \  \
-   /________\  \
-       ||
-```
+<img src="https://raw.githubusercontent.com/r-pine/rpine_template/master/.github/logo.svg" width="120" alt="rpine">
 
 # 🌲 rpine template
 
-**Project Template Generator**
+### Project Template Generator
 
-*Генератор full-stack проектов с интерактивным CLI*
+*Генератор full-stack проектов с интерактивным CLI на базе [gum](https://github.com/charmbracelet/gum)*
 
-[![Go](https://img.shields.io/badge/Go-1.23-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![gRPC](https://img.shields.io/badge/gRPC-Proto3-244C5A?style=flat-square&logo=grpc&logoColor=white)](https://grpc.io)
+&nbsp;
 
----
+[![Go](https://img.shields.io/badge/Go-1.23-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![gRPC](https://img.shields.io/badge/gRPC-Proto3-244C5A?style=for-the-badge&logo=grpc&logoColor=white)](https://grpc.io)
+
+&nbsp;
+
+<kbd> <br> &nbsp;&nbsp; [Быстрый старт](#-быстрый-старт) &nbsp;&nbsp; <br> <br> </kbd>&ensp;
+<kbd> <br> &nbsp;&nbsp; [Возможности](#-возможности) &nbsp;&nbsp; <br> <br> </kbd>&ensp;
+<kbd> <br> &nbsp;&nbsp; [Структура](#-структура-проекта) &nbsp;&nbsp; <br> <br> </kbd>&ensp;
+<kbd> <br> &nbsp;&nbsp; [Запуск](#-запуск) &nbsp;&nbsp; <br> <br> </kbd>
+
+&nbsp;
 
 </div>
+
+---
 
 ## ⚡ Быстрый старт
 
@@ -35,298 +38,359 @@ cd my_project
 bash setup.sh
 ```
 
-> Скрипт использует [gum](https://github.com/charmbracelet/gum) для красивого интерактивного CLI. Если `gum` не установлен — установится автоматически.
+> [!TIP]
+> Скрипт использует **[gum](https://github.com/charmbracelet/gum)** для красивого интерактивного CLI.
+> Если `gum` не установлен — установится автоматически.
 
-<div align="center">
+<details>
+<summary>📸 <b>Как выглядит квиз</b></summary>
+
+&nbsp;
 
 ```
   ╔════════════════════════════════════════════╗
+  ║                                            ║
   ║    🌲  rpine Project Template Generator    ║
+  ║                                            ║
   ╚════════════════════════════════════════════╝
 
-    ▎ Architecture
+    Generate a full-stack project with Go backend, React frontend,
+    Telegram bot, PostgreSQL + Redis, and Nginx/Traefik proxy.
 
-      Reverse proxy:
-      > traefik
-        nginx
+  ▎ Architecture
 
-      Backend framework:
-      > gin
-        echo
+    Reverse proxy:
+    > traefik
+      nginx
+
+    Backend framework:
+    > gin
+      echo
+
+  ╭───────────────────────────────────────────────────────────╮
+  │                                                           │
+  │    Project        my_project                              │
+  │    Domain         example.rpine.xyz                       │
+  │    Proxy          traefik (ACME: you@example.com)         │
+  │    Backend        echo                                    │
+  │    Features       React frontend, Telegram bot            │
+  │    PostgreSQL     :5432  (user: user_a3366e16)            │
+  │    gRPC           :50051 → :50052                         │
+  │                                                           │
+  ╰───────────────────────────────────────────────────────────╯
+
+    ✓ Backend (echo)
+    ✓ Proto
+    ✓ Frontend
+    ✓ Traefik config
+    ✓ Docker Compose
+    ✓ Environment files
+    ✓ Placeholders replaced
+
+  ╔════════════════════════════════════════╗
+  ║                                        ║
+  ║   ✓  Project generated successfully!   ║
+  ║                                        ║
+  ╚════════════════════════════════════════╝
 ```
 
-</div>
+</details>
 
 ---
 
 ## 🌲 Возможности
 
-<table>
-<tr>
-<td width="50%">
+> **Один скрипт — полностью готовый проект** с бекендом, фронтендом, ботом, базами данных, reverse proxy, gRPC, SSL и Docker.
 
 ### 🔧 Backend (Go)
-- **Gin** или **Echo** на выбор
-- Clean Architecture
-- Swagger / OpenAPI документация
-- Healthcheck endpoint
-- gRPC сервер
-- GORM (Gin) / Bun (Echo) ORM
-- logrus логирование
 
-</td>
-<td width="50%">
+| | |
+|---|---|
+| Фреймворк | **Gin** или **Echo** на выбор |
+| Архитектура | Clean Architecture (handlers → services → repositories) |
+| ORM | GORM (Gin) / Bun (Echo) |
+| API Docs | Swagger / OpenAPI (auto-generated via `swag`) |
+| gRPC | Встроенный сервер + proto codegen |
+| Логирование | logrus |
+| Health | `GET /healthcheck` → `{"status":"ok"}` |
 
 ### ⚛️ Frontend (React)
-- React 19 + TypeScript
-- Vite 6
-- TailwindCSS v4
-- Feature-Sliced Design (FSD)
-- react-router-dom v7
-- axios + @tanstack/react-query
-- Multi-stage Docker build
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+| | |
+|---|---|
+| Stack | React 19 + TypeScript + Vite 6 |
+| Стили | TailwindCSS v4 (`@tailwindcss/vite`) |
+| Архитектура | Feature-Sliced Design (FSD) |
+| Routing | react-router-dom v7 |
+| HTTP | axios + @tanstack/react-query |
+| Build | Multi-stage Docker (node → nginx:alpine) |
 
-### 🤖 Telegram Bot
-- Отдельный Go-сервис
-- Webhook + Polling режимы
-- Clean Architecture
-- Автоматическая настройка URL
+### 🤖 Telegram Bot *(опционально)*
 
-</td>
-<td width="50%">
+| | |
+|---|---|
+| Язык | Go (отдельный сервис) |
+| Режимы | Webhook + Long Polling |
+| Архитектура | Clean Architecture (delivery → usecase → repository) |
+| Интеграция | Авто-настройка webhook URL в Nginx/Traefik |
 
 ### 🌐 Reverse Proxy
-- **Nginx**: CORS, /api/v1 strip, gRPC
-- **Traefik**: ACME SSL, HTTP/3, gRPC
-- Автоматические сертификаты
-- WebSocket поддержка
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+| | Nginx | Traefik |
+|---|---|---|
+| SSL | Let's Encrypt (nginx-proxy) | ACME автоматически |
+| HTTP/3 | — | ✅ |
+| `/api/v1` strip | ✅ | ✅ |
+| CORS + OPTIONS | ✅ | ✅ |
+| gRPC proxy | ✅ (отдельный server block) | ✅ (TCP router) |
+| Webhook bot | ✅ | ✅ |
 
-### 🗄️ Database
-- PostgreSQL 15
-- Redis 7
-- Уникальные порты per project
-- Auto-generated credentials
+### 🗄️ Database & 📡 gRPC
 
-</td>
-<td width="50%">
-
-### 📡 gRPC
-- Готовая папка `proto/`
-- Makefile для кодогенерации
-- Nginx/Traefik проксирование
-- HealthCheck service example
-
-</td>
-</tr>
-</table>
+| | |
+|---|---|
+| PostgreSQL | v15, уникальные порты per project, auto-generated credentials |
+| Redis | v7, requirepass, configurable port |
+| Proto | Готовая папка `proto/` + `Makefile` для `protoc` codegen |
+| gRPC Health | HealthService example в `.proto` |
 
 ---
 
-## 🎯 Интерактивный квиз
+## 🎯 Параметры генерации
 
-Скрипт задаёт вопросы и генерирует проект под ваши нужды:
+### Интерактивный квиз
 
-| 🌲 | Параметр | Описание | По умолчанию |
+| | Параметр | Описание | По умолчанию |
 |:---:|---|---|:---:|
-| 🧹 | **Cleanup** | Удалить шаблоны после генерации | `n` |
-| 📦 | **Project name** | Название (snake_case) | `my_project` |
-| 🌐 | **Domain** | Домен проекта | `example.rpine.xyz` |
-| 📝 | **Go module** | Go module path | `github.com/r-pine/<name>` |
-| 🔀 | **Proxy** | `nginx` / `traefik` | `traefik` |
-| ⚙️ | **Backend** | `gin` / `echo` | `gin` |
-| ⚛️ | **Frontend** | React + Vite + Tailwind | `y` |
-| 🤖 | **Bot** | Telegram bot | `n` |
-| 🔌 | **Ports** | PostgreSQL, Redis, HTTP, gRPC | стандартные |
-| 📧 | **SSL Email** | Let's Encrypt / ACME | — |
+| 🧹 | Cleanup | Удалить шаблоны после генерации | `n` |
+| 📦 | Project name | snake_case название | `my_project` |
+| 🌐 | Domain | Домен проекта | `example.rpine.xyz` |
+| 📝 | Go module | Go module path | `github.com/r-pine/<name>` |
+| 🔀 | Proxy | `nginx` \| `traefik` | `traefik` |
+| ⚙️ | Backend | `gin` \| `echo` | `gin` |
+| ⚛️ | Frontend | React + Vite + Tailwind | `y` |
+| 🤖 | Bot | Telegram bot | `n` |
+| 🔌 | Ports | PG, Redis, HTTP, gRPC | стандартные |
+| 📧 | SSL Email | ACME / Let's Encrypt | — |
 
 ### 🔐 Автогенерация секретов
 
-Следующие значения генерируются **автоматически** и не запрашиваются:
+> [!IMPORTANT]
+> Эти значения генерируются **автоматически** через `openssl rand` и **не запрашиваются** в квизе.
 
-| Секрет | Длина | Куда попадает |
-|---|:---:|---|
-| `POSTGRES_USER` | 13 chars | `.envs/.env` |
-| `POSTGRES_PASSWORD` | 32 chars | `.envs/.env`, `.env.bot` |
-| `REDIS_PASSWORD` | 32 chars | `.envs/.env` |
-| `JWT_SECRET` | 64 chars | `.envs/.env` |
+| Секрет | Формат | Длина | Файл |
+|---|---|:---:|---|
+| `POSTGRES_USER` | `user_<hex>` | 13 | `.envs/.env` |
+| `POSTGRES_PASSWORD` | base64 | 32 | `.envs/.env`, `.env.bot` |
+| `REDIS_PASSWORD` | base64 | 32 | `.envs/.env` |
+| `JWT_SECRET` | base64 | 64 | `.envs/.env` |
 
 ---
 
 ## 📁 Структура проекта
 
+<details open>
+<summary><b>Полное дерево</b></summary>
+
 ```
-🌲 project/
-├── 🔧 backend/                 # Go backend
-│   ├── cmd/main/main.go       # Entry point
+project/
+│
+├── backend/                      ← Go backend (gin или echo)
+│   ├── cmd/main/main.go         # Entry point + Swagger annotations
 │   ├── internal/
-│   │   ├── config/            # Environment config
-│   │   ├── db/                # PostgreSQL + Redis
-│   │   ├── models/            # DB models
-│   │   ├── repositories/      # Data access layer
-│   │   ├── services/          # Business logic
-│   │   ├── http_handlers/     # HTTP handlers (gin)
-│   │   ├── handlers/          # HTTP handlers (echo)
-│   │   ├── routes/            # Route registration (echo)
-│   │   ├── middleware/        # CORS, Auth, Logger
-│   │   └── grpc/              # gRPC server
-│   ├── pkg/logging/           # logrus wrapper
-│   ├── Dockerfile
+│   │   ├── config/              # Env config (cleanenv / godotenv)
+│   │   ├── db/                  # PostgreSQL + Redis connections
+│   │   ├── models/              # DB models
+│   │   ├── repositories/        # Data access layer
+│   │   ├── services/            # Business logic
+│   │   ├── dto/                 # Request/Response DTOs
+│   │   ├── http_handlers/       # HTTP handlers (gin)
+│   │   ├── handlers/            # HTTP handlers (echo)
+│   │   ├── routes/              # Route registration (echo)
+│   │   ├── middleware/          # CORS, Auth, Logger
+│   │   └── grpc/server.go       # gRPC server bootstrap
+│   ├── pkg/logging/             # logrus wrapper
+│   ├── Dockerfile               # Multi-stage build + swag init
 │   └── go.mod
 │
-├── ⚛️  frontend/                # React SPA (optional)
+├── frontend/                     ← React SPA (optional)
 │   ├── src/
-│   │   ├── app/               # App, routes, styles
-│   │   ├── shared/            # API client, config, types
-│   │   ├── entities/          # FSD: entities
-│   │   ├── features/          # FSD: features
-│   │   ├── widgets/           # FSD: layout
-│   │   └── pages/             # FSD: pages
-│   ├── Dockerfile
+│   │   ├── app/                 # App.tsx, main.tsx, routes, styles
+│   │   ├── shared/              # baseApi, config, types
+│   │   ├── entities/            # FSD layer
+│   │   ├── features/            # FSD layer
+│   │   ├── widgets/layout/      # Layout component
+│   │   └── pages/               # FSD layer
+│   ├── nginx.conf               # SPA try_files (baked into image)
+│   ├── Dockerfile               # Multi-stage: node build → nginx
 │   └── package.json
 │
-├── 🤖 bot/                     # Telegram bot (optional)
+├── bot/                          ← Telegram bot (optional)
 │   ├── cmd/bot/main.go
 │   ├── internal/
 │   │   ├── config/
-│   │   ├── delivery/telegram/
-│   │   ├── domain/
+│   │   ├── delivery/telegram/   # Bot init, webhook, handlers
+│   │   ├── domain/              # Domain models
 │   │   ├── repository/
 │   │   └── usecase/
 │   ├── Dockerfile
 │   └── go.mod
 │
-├── 📡 proto/                    # gRPC proto files
-│   ├── <project>.proto
-│   └── Makefile
+├── proto/                        ← gRPC definitions
+│   ├── <project>.proto          # HealthService example
+│   └── Makefile                 # make generate
 │
-├── 🌐 nginx-app/               # Nginx config (if nginx)
-├── 🌐 traefik-app/             # Traefik config (if traefik)
-├── 🌐 ci_traefik/              # Traefik edge proxy
+├── nginx-app/                    ← if proxy = nginx
+│   ├── nginx.conf
+│   └── default.conf             # /api/v1, CORS, gRPC, webhook
 │
-├── 🔒 .envs/                   # Environment variables
-│   ├── .env.example            # Template (in git)
-│   └── .env                    # Real values (gitignored)
+├── traefik-app/                  ← if proxy = traefik
+│   ├── traefik.yml              # entryPoints, ACME, providers
+│   └── dynamic/project.yml      # routers, services, middlewares
 │
-├── 🐳 docker-compose.yml       # App services
-├── 🐳 docker-compose.db.yml    # PostgreSQL + Redis
-├── 📄 .gitignore
-└── 📄 .dockerignore
+├── ci_traefik/                   ← Traefik edge proxy
+│   └── docker-compose.yml
+│
+├── .envs/
+│   ├── .env.example             ← committed (changeme placeholders)
+│   ├── .env                     ← gitignored (real secrets)
+│   ├── .env.bot                 ← gitignored (bot token + DB URL)
+│   ├── .env.web                 ← gitignored (nginx Let's Encrypt)
+│   └── .env.front               ← gitignored (VITE_API_BASE_URL)
+│
+├── docker-compose.yml            ← App services
+├── docker-compose.db.yml         ← PostgreSQL + Redis
+├── .gitignore
+└── .dockerignore
 ```
+
+</details>
 
 ---
 
 ## 🚀 Запуск
 
-### 1. Создать Docker-сеть
+> [!NOTE]
+> Все команды выполняются из корня сгенерированного проекта.
+
+**1** &ensp; Создать Docker-сеть
 
 ```bash
 docker network create shared-web
 ```
 
-### 2. Запустить базы данных
+**2** &ensp; Запустить базы данных
 
 ```bash
 docker compose -f docker-compose.db.yml up -d
 ```
 
-### 3. Собрать и запустить сервисы
+**3** &ensp; Собрать и запустить сервисы
 
 ```bash
 docker compose up -d --build
 ```
 
-### 4. Запустить reverse proxy
+**4** &ensp; Запустить reverse proxy
 
-**Traefik:**
 ```bash
+# Traefik
 cd ci_traefik && docker compose up -d
+
+# Nginx — уже в docker-compose.yml, ничего дополнительного
 ```
 
-**Nginx:** настроен автоматически в `docker-compose.yml`
-
-### 5. Проверить
+**5** &ensp; Проверить
 
 ```bash
-# API healthcheck
+# Health check
 curl https://your-domain.xyz/api/v1/healthcheck
+# → {"status":"ok","message":"my_project API is running"}
 
-# gRPC (grpcurl)
+# gRPC
 grpcurl -plaintext localhost:50052 list
 ```
 
 ---
 
-## 🔒 Переменные окружения
+## 🔒 Окружение
 
-| Файл | Описание | В Git? |
+| Файл | Описание | Git |
 |---|---|:---:|
 | `.envs/.env.example` | Шаблон с `changeme` | ✅ |
 | `.envs/.env` | Реальные значения + сгенерированные пароли | ❌ |
-| `.envs/.env.bot` | Токен бота + DATABASE_URL | ❌ |
+| `.envs/.env.bot` | Токен бота + `DATABASE_URL` | ❌ |
 | `.envs/.env.bot.example` | Шаблон для бота | ✅ |
-| `.envs/.env.web` | VIRTUAL_HOST, Let's Encrypt (nginx) | ❌ |
-| `.envs/.env.front` | VITE_API_BASE_URL | ❌ |
-| `ci_traefik/.env` | ACME_EMAIL (traefik) | ❌ |
+| `.envs/.env.web` | `VIRTUAL_HOST`, Let's Encrypt (nginx) | ❌ |
+| `.envs/.env.front` | `VITE_API_BASE_URL` | ❌ |
+| `ci_traefik/.env` | `ACME_EMAIL` (traefik) | ❌ |
 
 ---
 
-## 📡 gRPC
+<details>
+<summary>📡 <b>gRPC — генерация кода</b></summary>
 
-```bash
-# Генерация Go-кода из proto
-cd proto && make generate
+&nbsp;
 
-# Файлы появятся в proto/gen/
-```
+**Установка инструментов:**
 
-Требуется установка:
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
----
+**Генерация:**
 
-## 🏗️ Архитектура
+```bash
+cd proto
+make generate
+# → файлы появятся в proto/gen/
+```
+
+</details>
+
+<details>
+<summary>🏗️ <b>Архитектура</b></summary>
+
+&nbsp;
 
 ```
-                    ┌─────────────┐
-                    │   Client    │
-                    └──────┬──────┘
-                           │
-               ┌───────────┴───────────┐
-               │  Nginx / Traefik      │
-               │  SSL, CORS, routing   │
-               └───┬───────┬───────┬───┘
-                   │       │       │
-          /api/v1/ │   /   │       │ :50052
-                   │       │       │
-            ┌──────┴──┐ ┌──┴───┐ ┌─┴────┐
-            │ Backend  │ │Front │ │ gRPC │
-            │  (Go)    │ │(React│ │      │
-            └────┬─────┘ └──────┘ └──────┘
-                 │
-        ┌────────┴────────┐
-        │                 │
-   ┌────┴─────┐    ┌─────┴────┐
-   │PostgreSQL │    │  Redis   │
-   └──────────┘    └──────────┘
+                       ┌──────────┐
+                       │  Client  │
+                       └────┬─────┘
+                            │
+                ┌───────────┴───────────┐
+                │   Nginx  /  Traefik   │
+                │   SSL · CORS · Route  │
+                └──┬────────┬────────┬──┘
+                   │        │        │
+          /api/v1/ │    /   │        │ :50052
+                   │        │        │
+            ┌──────┴───┐ ┌──┴──┐ ┌───┴───┐
+            │ Backend   │ │Front│ │ gRPC  │
+            │ (Go)      │ │end  │ │Server │
+            └─────┬─────┘ └─────┘ └───────┘
+                  │
+         ┌────────┴────────┐
+         │                 │
+    ┌────┴──────┐   ┌─────┴─────┐
+    │PostgreSQL │   │   Redis   │
+    │   :5432   │   │   :6379   │
+    └───────────┘   └───────────┘
 ```
+
+</details>
 
 ---
 
 <div align="center">
 
-**Built with 🌲 by [r-pine](https://github.com/r-pine)**
+&nbsp;
+
+🌲
+
+**Built by [r-pine](https://github.com/r-pine)**
+
+&nbsp;
 
 </div>
