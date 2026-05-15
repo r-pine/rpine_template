@@ -390,28 +390,10 @@ generate_project() {
 
 gum spin --spinner dot --spinner.foreground "#7C3AED" --title "Generating project..." -- bash -c "$(declare -f generate_project); generate_project"
 
-# ─── Rename project directory ─────────────────────────────────────────────────
-PROJECT_SLUG=$(echo "$PROJECT_NAME" | tr '_' '-')
-CURRENT_DIR=$(basename "$SCRIPT_DIR")
-if [[ "$CURRENT_DIR" != "$PROJECT_SLUG" ]]; then
-    PARENT_DIR=$(dirname "$SCRIPT_DIR")
-    NEW_DIR="${PARENT_DIR}/${PROJECT_SLUG}"
-    if [ -d "$NEW_DIR" ]; then
-        gum style --foreground "#F59E0B" --margin "0 2" "⚠ Directory ${NEW_DIR} already exists, skipping rename"
-    else
-        gum spin --spinner dot --spinner.foreground "#7C3AED" --title "Renaming directory → $PROJECT_SLUG" -- \
-            bash -c "cd '$PARENT_DIR' && mv '$CURRENT_DIR' '$PROJECT_SLUG'"
-        cd "$NEW_DIR"
-    fi
-fi
-
 # ─── Cleanup ─────────────────────────────────────────────────────────────────
 if [[ "$CLEANUP" == "y" ]]; then
     gum spin --spinner dot --spinner.foreground "#7C3AED" --title "Cleaning up..." -- \
-        bash -c "rm -rf templates/ setup.sh .git"
-    git init -q
-    git add .
-    git commit -q -m "Initial commit: ${PROJECT_NAME} project generated from rpine template"
+        bash -c "rm -rf templates/ setup.sh"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
