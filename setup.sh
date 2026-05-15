@@ -225,170 +225,178 @@ fi
 
 echo ""
 
-generate_project() {
-    # ─── Clean existing generated dirs ───────────────────────────────────────
-    for d in backend frontend bot proto nginx-app traefik-app ci_traefik ci_nginx .envs; do
-        rm -rf "$d"
-    done
-    rm -f docker-compose.yml docker-compose.db.yml .gitignore .dockerignore
+gum style --foreground "#7C3AED" --margin "0 2" "⏳ Generating project..."
+echo ""
 
-    # ─── Copy backend ────────────────────────────────────────────────────────
-    cp -r "templates/backend-${BACKEND_FRAMEWORK}" backend
+# ─── Clean existing generated dirs ───────────────────────────────────────
+for d in backend frontend bot proto nginx-app traefik-app ci_traefik ci_nginx .envs; do
+    rm -rf "$d"
+done
+rm -f docker-compose.yml docker-compose.db.yml .gitignore .dockerignore
 
-    # ─── Copy proto ──────────────────────────────────────────────────────────
-    cp -r templates/proto proto
+# ─── Copy backend ────────────────────────────────────────────────────────
+cp -r "templates/backend-${BACKEND_FRAMEWORK}" backend
+gum style --foreground "#22C55E" --margin "0 4" "✓ Backend ($BACKEND_FRAMEWORK)"
 
-    # ─── Copy frontend ───────────────────────────────────────────────────────
-    if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
-        cp -r templates/frontend frontend
-    fi
+# ─── Copy proto ──────────────────────────────────────────────────────────
+cp -r templates/proto proto
+gum style --foreground "#22C55E" --margin "0 4" "✓ Proto"
 
-    # ─── Copy bot ────────────────────────────────────────────────────────────
+# ─── Copy frontend ───────────────────────────────────────────────────────
+if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
+    cp -r templates/frontend frontend
+    gum style --foreground "#22C55E" --margin "0 4" "✓ Frontend"
+fi
+
+# ─── Copy bot ────────────────────────────────────────────────────────────
+if [[ "$INCLUDE_BOT" == "y" ]]; then
+    cp -r templates/bot bot
+    gum style --foreground "#22C55E" --margin "0 4" "✓ Telegram Bot"
+fi
+
+# ─── Copy proxy configs ──────────────────────────────────────────────────
+if [[ "$PROXY_TYPE" == "nginx" ]]; then
+    cp -r templates/nginx-app nginx-app
+
     if [[ "$INCLUDE_BOT" == "y" ]]; then
-        cp -r templates/bot bot
-    fi
-
-    # ─── Copy proxy configs ──────────────────────────────────────────────────
-    if [[ "$PROXY_TYPE" == "nginx" ]]; then
-        cp -r templates/nginx-app nginx-app
-
-        if [[ "$INCLUDE_BOT" == "y" ]]; then
-            sed -i 's|# BOT_WEBHOOK_LOCATION|location /webhook/bot {\
+        sed -i 's|# BOT_WEBHOOK_LOCATION|location /webhook/bot {\
         proxy_pass http://backend/webhook/bot;\
         proxy_set_header Host $host;\
         proxy_set_header X-Real-IP $remote_addr;\
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\
         proxy_set_header X-Forwarded-Proto $scheme;\
     }|' nginx-app/default.conf
-        else
-            sed -i '/# BOT_WEBHOOK_LOCATION/d' nginx-app/default.conf
-        fi
+    else
+        sed -i '/# BOT_WEBHOOK_LOCATION/d' nginx-app/default.conf
+    fi
 
-        if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
-            FRONTEND_BLOCK="location / {\\
+    if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
+        FRONTEND_BLOCK="location / {\\
         proxy_pass http://${PROJECT_NAME}_frontend:80;\\
         proxy_set_header Host \\\$host;\\
         proxy_set_header X-Real-IP \\\$remote_addr;\\
         proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;\\
         proxy_set_header X-Forwarded-Proto \\\$scheme;\\
     }"
-            sed -i "s|# FRONTEND_LOCATION|${FRONTEND_BLOCK}|" nginx-app/default.conf
-        else
-            sed -i '/# FRONTEND_LOCATION/d' nginx-app/default.conf
-        fi
-
-    elif [[ "$PROXY_TYPE" == "traefik" ]]; then
-        cp -r templates/traefik-app traefik-app
-        cp -r templates/ci_traefik ci_traefik
-
-        if [[ "$INCLUDE_BOT" == "y" ]]; then
-            sed -i "s|# BOT_ROUTER|${PROJECT_NAME}-webhook:\n      rule: \"Host(\`${PROJECT_DOMAIN}\`) \&\& PathPrefix(\`/webhook/bot\`)\"\n      entryPoints:\n        - websecure\n      service: ${PROJECT_NAME}-api\n      tls:\n        certResolver: le|" traefik-app/dynamic/project.yml
-        else
-            sed -i '/# BOT_ROUTER/d' traefik-app/dynamic/project.yml
-        fi
-
-        if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
-            sed -i "s|# FRONTEND_ROUTER|${PROJECT_NAME}-frontend:\n      rule: \"Host(\`${PROJECT_DOMAIN}\`)\"\n      entryPoints:\n        - websecure\n      service: ${PROJECT_NAME}-frontend\n      tls:\n        certResolver: le\n      priority: 1|" traefik-app/dynamic/project.yml
-            sed -i "s|# FRONTEND_SERVICE|${PROJECT_NAME}-frontend:\n      loadBalancer:\n        servers:\n          - url: \"http://${PROJECT_NAME}_frontend:80\"|" traefik-app/dynamic/project.yml
-        else
-            sed -i '/# FRONTEND_ROUTER/d' traefik-app/dynamic/project.yml
-            sed -i '/# FRONTEND_SERVICE/d' traefik-app/dynamic/project.yml
-        fi
+        sed -i "s|# FRONTEND_LOCATION|${FRONTEND_BLOCK}|" nginx-app/default.conf
+    else
+        sed -i '/# FRONTEND_LOCATION/d' nginx-app/default.conf
     fi
+    gum style --foreground "#22C55E" --margin "0 4" "✓ Nginx config"
 
-    # ─── Docker Compose ──────────────────────────────────────────────────────
-    cp templates/compose/docker-compose-base.yml docker-compose.yml
-
-    if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
-        cat templates/compose/docker-compose-frontend.yml >> docker-compose.yml
-    fi
-    if [[ "$INCLUDE_BOT" == "y" ]]; then
-        cat templates/compose/docker-compose-bot.yml >> docker-compose.yml
-    fi
-    if [[ "$PROXY_TYPE" == "nginx" ]]; then
-        cat templates/compose/docker-compose-nginx.yml >> docker-compose.yml
-    fi
-    cat templates/compose/docker-compose-networks.yml >> docker-compose.yml
-
-    cp templates/compose/docker-compose.db.yml docker-compose.db.yml
-
-    # ─── Environment files ───────────────────────────────────────────────────
-    mkdir -p .envs
-
-    cp templates/envs/env.example .envs/.env.example
-    cp templates/envs/env.example .envs/.env
-    sed -i "s/POSTGRES_USER=changeme/POSTGRES_USER=${POSTGRES_USER}/" .envs/.env
-    sed -i "s/POSTGRES_PASSWORD=changeme/POSTGRES_PASSWORD=${POSTGRES_PASSWORD}/" .envs/.env
-    sed -i "s/REDIS_PASSWORD=changeme/REDIS_PASSWORD=${REDIS_PASSWORD}/" .envs/.env
-    sed -i "s/JWT_SECRET=changeme/JWT_SECRET=${JWT_SECRET}/" .envs/.env
+elif [[ "$PROXY_TYPE" == "traefik" ]]; then
+    cp -r templates/traefik-app traefik-app
+    cp -r templates/ci_traefik ci_traefik
 
     if [[ "$INCLUDE_BOT" == "y" ]]; then
-        cp templates/envs/env.bot.example .envs/.env.bot.example
-        cp templates/envs/env.bot.example .envs/.env.bot
-        sed -i "s|TELEGRAM_BOT_TOKEN=your_bot_token|TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}|" .envs/.env.bot
-        sed -i "s|TELEGRAM_WEBHOOK_SECRET=changeme|TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}|" .envs/.env.bot
-        sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-${PROJECT_NAME}:${POSTGRES_PORT}/${PROJECT_NAME}|" .envs/.env.bot
-    fi
-
-    if [[ "$PROXY_TYPE" == "nginx" ]]; then
-        cp templates/envs/env.web.example .envs/.env.web.example
-        cp templates/envs/env.web.example .envs/.env.web
-        sed -i "s|LETSENCRYPT_EMAIL=changeme@example.com|LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}|" .envs/.env.web
-    fi
-
-    if [[ "$PROXY_TYPE" == "traefik" ]]; then
-        cp templates/envs/ci_traefik.env.example ci_traefik/.env.example
-        cp templates/envs/ci_traefik.env.example ci_traefik/.env
+        sed -i "s|# BOT_ROUTER|${PROJECT_NAME}-webhook:\n      rule: \"Host(\`${PROJECT_DOMAIN}\`) \&\& PathPrefix(\`/webhook/bot\`)\"\n      entryPoints:\n        - websecure\n      service: ${PROJECT_NAME}-api\n      tls:\n        certResolver: le|" traefik-app/dynamic/project.yml
+    else
+        sed -i '/# BOT_ROUTER/d' traefik-app/dynamic/project.yml
     fi
 
     if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
-        cp templates/envs/env.front.example .envs/.env.front.example
-        cp templates/envs/env.front.example .envs/.env.front
+        sed -i "s|# FRONTEND_ROUTER|${PROJECT_NAME}-frontend:\n      rule: \"Host(\`${PROJECT_DOMAIN}\`)\"\n      entryPoints:\n        - websecure\n      service: ${PROJECT_NAME}-frontend\n      tls:\n        certResolver: le\n      priority: 1|" traefik-app/dynamic/project.yml
+        sed -i "s|# FRONTEND_SERVICE|${PROJECT_NAME}-frontend:\n      loadBalancer:\n        servers:\n          - url: \"http://${PROJECT_NAME}_frontend:80\"|" traefik-app/dynamic/project.yml
+    else
+        sed -i '/# FRONTEND_ROUTER/d' traefik-app/dynamic/project.yml
+        sed -i '/# FRONTEND_SERVICE/d' traefik-app/dynamic/project.yml
     fi
+    gum style --foreground "#22C55E" --margin "0 4" "✓ Traefik config"
+fi
 
-    # ─── Misc files ──────────────────────────────────────────────────────────
-    cp templates/gitignore.tpl .gitignore
-    cp templates/dockerignore.tpl .dockerignore
+# ─── Docker Compose ──────────────────────────────────────────────────────
+cp templates/compose/docker-compose-base.yml docker-compose.yml
 
-    # ─── Placeholder substitution ────────────────────────────────────────────
-    find . -maxdepth 1 -mindepth 1 -not -name 'templates' -not -name 'setup.sh' -not -name '.git' -not -name '*.plan.md' | while read -r dir; do
-        if [ -d "$dir" ] || [ -f "$dir" ]; then
-            find "$dir" -type f \( \
-                -name "*.go" -o -name "*.mod" -o -name "*.yml" -o -name "*.yaml" \
-                -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" \
-                -o -name "*.html" -o -name "*.css" -o -name "*.conf" -o -name ".env*" \
-                -o -name "*.proto" -o -name "Makefile" \
-                -o -name "Dockerfile" -o -name ".gitignore" -o -name ".dockerignore" \
-                -o -name "*.md" \
-            \) -exec sed -i \
-                -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-                -e "s|{{PROJECT_DOMAIN}}|${PROJECT_DOMAIN}|g" \
-                -e "s|{{GO_MODULE}}|${GO_MODULE}|g" \
-                -e "s|{{BACKEND_PORT}}|${BACKEND_PORT}|g" \
-                -e "s|{{GRPC_PORT}}|${GRPC_PORT}|g" \
-                -e "s|{{GRPC_EXTERNAL_PORT}}|${GRPC_EXTERNAL_PORT}|g" \
-                -e "s|{{POSTGRES_PORT}}|${POSTGRES_PORT}|g" \
-                -e "s|{{REDIS_PORT}}|${REDIS_PORT}|g" \
-                -e "s|{{NGINX_PORT}}|${NGINX_PORT}|g" \
-                -e "s|{{ACME_EMAIL}}|${ACME_EMAIL}|g" \
-                -e "s|{{LETSENCRYPT_EMAIL}}|${LETSENCRYPT_EMAIL}|g" \
-                {} +
-        fi
-    done
+if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
+    cat templates/compose/docker-compose-frontend.yml >> docker-compose.yml
+fi
+if [[ "$INCLUDE_BOT" == "y" ]]; then
+    cat templates/compose/docker-compose-bot.yml >> docker-compose.yml
+fi
+if [[ "$PROXY_TYPE" == "nginx" ]]; then
+    cat templates/compose/docker-compose-nginx.yml >> docker-compose.yml
+fi
+cat templates/compose/docker-compose-networks.yml >> docker-compose.yml
 
-    # ─── Rename proto file ───────────────────────────────────────────────────
-    if [ -f "proto/service.proto" ]; then
-        mv "proto/service.proto" "proto/${PROJECT_NAME}.proto"
+cp templates/compose/docker-compose.db.yml docker-compose.db.yml
+gum style --foreground "#22C55E" --margin "0 4" "✓ Docker Compose"
+
+# ─── Environment files ───────────────────────────────────────────────────
+mkdir -p .envs
+
+cp templates/envs/env.example .envs/.env.example
+cp templates/envs/env.example .envs/.env
+sed -i "s/POSTGRES_USER=changeme/POSTGRES_USER=${POSTGRES_USER}/" .envs/.env
+sed -i "s/POSTGRES_PASSWORD=changeme/POSTGRES_PASSWORD=${POSTGRES_PASSWORD}/" .envs/.env
+sed -i "s/REDIS_PASSWORD=changeme/REDIS_PASSWORD=${REDIS_PASSWORD}/" .envs/.env
+sed -i "s/JWT_SECRET=changeme/JWT_SECRET=${JWT_SECRET}/" .envs/.env
+
+if [[ "$INCLUDE_BOT" == "y" ]]; then
+    cp templates/envs/env.bot.example .envs/.env.bot.example
+    cp templates/envs/env.bot.example .envs/.env.bot
+    sed -i "s|TELEGRAM_BOT_TOKEN=your_bot_token|TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}|" .envs/.env.bot
+    sed -i "s|TELEGRAM_WEBHOOK_SECRET=changeme|TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}|" .envs/.env.bot
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-${PROJECT_NAME}:${POSTGRES_PORT}/${PROJECT_NAME}|" .envs/.env.bot
+fi
+
+if [[ "$PROXY_TYPE" == "nginx" ]]; then
+    cp templates/envs/env.web.example .envs/.env.web.example
+    cp templates/envs/env.web.example .envs/.env.web
+    sed -i "s|LETSENCRYPT_EMAIL=changeme@example.com|LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}|" .envs/.env.web
+fi
+
+if [[ "$PROXY_TYPE" == "traefik" ]]; then
+    cp templates/envs/ci_traefik.env.example ci_traefik/.env.example
+    cp templates/envs/ci_traefik.env.example ci_traefik/.env
+fi
+
+if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
+    cp templates/envs/env.front.example .envs/.env.front.example
+    cp templates/envs/env.front.example .envs/.env.front
+fi
+gum style --foreground "#22C55E" --margin "0 4" "✓ Environment files"
+
+# ─── Misc files ──────────────────────────────────────────────────────────
+cp templates/gitignore.tpl .gitignore
+cp templates/dockerignore.tpl .dockerignore
+
+# ─── Placeholder substitution ────────────────────────────────────────────
+find . -maxdepth 1 -mindepth 1 -not -name 'templates' -not -name 'setup.sh' -not -name '.git' -not -name '*.plan.md' | while read -r dir; do
+    if [ -d "$dir" ] || [ -f "$dir" ]; then
+        find "$dir" -type f \( \
+            -name "*.go" -o -name "*.mod" -o -name "*.yml" -o -name "*.yaml" \
+            -o -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" \
+            -o -name "*.html" -o -name "*.css" -o -name "*.conf" -o -name ".env*" \
+            -o -name "*.proto" -o -name "Makefile" \
+            -o -name "Dockerfile" -o -name ".gitignore" -o -name ".dockerignore" \
+            -o -name "*.md" \
+        \) -exec sed -i \
+            -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+            -e "s|{{PROJECT_DOMAIN}}|${PROJECT_DOMAIN}|g" \
+            -e "s|{{GO_MODULE}}|${GO_MODULE}|g" \
+            -e "s|{{BACKEND_PORT}}|${BACKEND_PORT}|g" \
+            -e "s|{{GRPC_PORT}}|${GRPC_PORT}|g" \
+            -e "s|{{GRPC_EXTERNAL_PORT}}|${GRPC_EXTERNAL_PORT}|g" \
+            -e "s|{{POSTGRES_PORT}}|${POSTGRES_PORT}|g" \
+            -e "s|{{REDIS_PORT}}|${REDIS_PORT}|g" \
+            -e "s|{{NGINX_PORT}}|${NGINX_PORT}|g" \
+            -e "s|{{ACME_EMAIL}}|${ACME_EMAIL}|g" \
+            -e "s|{{LETSENCRYPT_EMAIL}}|${LETSENCRYPT_EMAIL}|g" \
+            {} +
     fi
+done
+gum style --foreground "#22C55E" --margin "0 4" "✓ Placeholders replaced"
 
-    # ─── Create go.sum placeholders ──────────────────────────────────────────
-    touch backend/go.sum
-    if [[ "$INCLUDE_BOT" == "y" ]]; then
-        touch bot/go.sum
-    fi
-}
+# ─── Rename proto file ───────────────────────────────────────────────────
+if [ -f "proto/service.proto" ]; then
+    mv "proto/service.proto" "proto/${PROJECT_NAME}.proto"
+fi
 
-gum spin --spinner dot --spinner.foreground "#7C3AED" --title "Generating project..." -- bash -c "$(declare -f generate_project); generate_project"
+# ─── Create go.sum placeholders ──────────────────────────────────────────
+touch backend/go.sum
+if [[ "$INCLUDE_BOT" == "y" ]]; then
+    touch bot/go.sum
+fi
 
 # ─── Cleanup ─────────────────────────────────────────────────────────────────
 if [[ "$CLEANUP" == "y" ]]; then
