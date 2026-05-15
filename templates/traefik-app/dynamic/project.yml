@@ -1,0 +1,70 @@
+http:
+  routers:
+    # HTTP -> HTTPS redirect (handled by entryPoint config in traefik.yml)
+
+    # API router — strip /api/v1 prefix
+    {{PROJECT_NAME}}-api:
+      rule: "Host(`{{PROJECT_DOMAIN}}`) && PathPrefix(`/api/v1`)"
+      entryPoints:
+        - websecure
+      service: {{PROJECT_NAME}}-api
+      tls:
+        certResolver: le
+      middlewares:
+        - {{PROJECT_NAME}}-strip-api
+        - {{PROJECT_NAME}}-cors
+
+    # BOT_ROUTER
+
+    # FRONTEND_ROUTER
+
+  services:
+    {{PROJECT_NAME}}-api:
+      loadBalancer:
+        servers:
+          - url: "http://{{PROJECT_NAME}}_backend:{{BACKEND_PORT}}"
+
+    # FRONTEND_SERVICE
+
+  middlewares:
+    {{PROJECT_NAME}}-strip-api:
+      stripPrefix:
+        prefixes:
+          - "/api/v1"
+    {{PROJECT_NAME}}-cors:
+      headers:
+        accessControlAllowOriginList:
+          - "https://{{PROJECT_DOMAIN}}"
+          - "http://localhost:5173"
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Requested-With
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 1728000
+
+  # gRPC routing
+  serversTransports:
+    {{PROJECT_NAME}}-grpc-transport:
+      maxIdleConnsPerHost: 100
+
+tcp:
+  routers:
+    {{PROJECT_NAME}}-grpc:
+      rule: "HostSNI(`*`)"
+      entryPoints:
+        - grpc
+      service: {{PROJECT_NAME}}-grpc
+
+  services:
+    {{PROJECT_NAME}}-grpc:
+      loadBalancer:
+        servers:
+          - address: "{{PROJECT_NAME}}_backend:{{GRPC_PORT}}"

@@ -1,0 +1,7 @@
+
+  bot:
+    build: ./bot
+    container_name: {{PROJECT_NAME}}_bot
+    env_file:
+      - .envs/.env.bot
+    restart: always

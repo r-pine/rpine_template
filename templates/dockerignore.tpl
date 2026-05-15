@@ -1,0 +1,14 @@
+.git
+.docker-volumes
+node_modules
+dist
+build
+.env*
+!.env.example
+!.env.*.example
+proto/gen/
+*.md
+.idea
+.vscode
+.cursor
+.DS_Store

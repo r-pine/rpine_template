@@ -1,0 +1,21 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: {{PROJECT_NAME}}_traefik
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "{{GRPC_EXTERNAL_PORT}}:{{GRPC_EXTERNAL_PORT}}"
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - ../traefik-app/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../traefik-app/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - shared-web
+
+networks:
+  shared-web:
+    external: true

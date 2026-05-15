@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: ./backend
+    container_name: {{PROJECT_NAME}}_backend
+    env_file:
+      - .envs/.env
+    restart: always
+    expose:
+      - "{{BACKEND_PORT}}"
+      - "{{GRPC_PORT}}"

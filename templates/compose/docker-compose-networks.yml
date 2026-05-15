@@ -1,0 +1,5 @@
+
+networks:
+  default:
+    external: true
+    name: shared-web
