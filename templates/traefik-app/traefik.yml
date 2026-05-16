@@ -12,8 +12,6 @@ entryPoints:
   websecure:
     address: ":443"
     http3: {}
-  grpc:
-    address: ":{{GRPC_EXTERNAL_PORT}}"
 
 providers:
   file:

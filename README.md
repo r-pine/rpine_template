@@ -83,7 +83,7 @@ bash setup.sh
   │    Backend        echo                            │
   │    Features       React frontend, Telegram bot    │
   │    PostgreSQL     :5432  (user: user_a3366e16)    │
-  │    gRPC           :50051 → :50052                 │
+  │    gRPC           :50051 (external via :443)  │
   │                                                   │
   ╰───────────────────────────────────────────────────╯
 
@@ -149,7 +149,7 @@ React 19 · TypeScript · Vite 6 · TailwindCSS v4 · FSD-архитектура
 
 </td><td>
 
-**Nginx** (CORS, strip prefix, gRPC) или **Traefik** (ACME SSL, HTTP/3, TCP gRPC router)
+**Nginx** (CORS, strip prefix, gRPC) или **Traefik** (ACME SSL, HTTP/3, gRPC via websecure)
 
 </td></tr>
 <tr><td>
@@ -167,7 +167,7 @@ PostgreSQL 15 + Redis 7 · уникальные порты · автогенер
 
 </td><td>
 
-`proto/` с Makefile для codegen · Nginx/Traefik proxy · HealthService example
+`proto/` с Makefile для codegen · gRPC через :443 (TLS) · HealthService example
 
 </td></tr>
 <tr><td>
@@ -276,6 +276,7 @@ project/
 │  └─ Makefile                   make generate
 │
 ├─ nginx-app/                     nginx proxy config
+├─ ci_nginx/                      nginx edge (nginx-proxy + ACME)
 ├─ traefik-app/                   traefik + dynamic routes
 ├─ ci_traefik/                    traefik edge compose
 │
@@ -326,7 +327,8 @@ docker compose up -d --build
 # traefik
 cd ci_traefik && docker compose up -d
 
-# nginx — уже в docker-compose.yml
+# nginx
+cd ci_nginx && docker compose up -d --build
 ```
 
 **`5`** &ensp; Проверить
@@ -335,7 +337,8 @@ cd ci_traefik && docker compose up -d
 curl https://your-domain.xyz/api/v1/healthcheck
 # {"status":"ok","message":"my_project API is running"}
 
-grpcurl -plaintext localhost:50052 list
+# gRPC through TLS :443
+grpcurl your-domain.xyz:443 my_project.HealthService/Check
 ```
 
 <br>
@@ -355,6 +358,7 @@ grpcurl -plaintext localhost:50052 list
 | `.envs/.env.web` | VIRTUAL_HOST · Let's Encrypt | ❌ |
 | `.envs/.env.front` | VITE_API_BASE_URL | ❌ |
 | `ci_traefik/.env` | ACME_EMAIL | ❌ |
+| `ci_nginx/.env` | DEFAULT_EMAIL (Let's Encrypt) | ❌ |
 
 <br>
 
@@ -374,6 +378,42 @@ cd proto && make generate
 </details>
 
 <details>
+<summary>&emsp;🌐&ensp;<b>gRPC на :443</b></summary>
+<br>
+
+gRPC трафик проходит через **тот же порт 443**, что и HTTP/HTTPS — без отдельного порта.
+
+**Nginx-вариант:**
+
+```
+Client :443 (TLS) → ci_nginx (nginx-proxy + ACME)
+                        → app nginx :50052 (internal)
+                            → backend :50051 (gRPC)
+```
+
+**Traefik-вариант:**
+
+```
+Client :443 (TLS) → Traefik websecure (Content-Type: application/grpc)
+                        → h2c://backend:50051 (gRPC)
+```
+
+| | Nginx | Traefik |
+|---|---|---|
+| Внешний порт | :443 (edge nginx-proxy) | :443 (websecure) |
+| SSL termination | nginx-proxy + ACME companion | Traefik ACME (Let's Encrypt) |
+| Внутренний hop | nginx:50052 → backend:50051 | h2c → backend:50051 |
+| Routing | `location ~ ^/project_name\.` | `HeaderRegexp + PathPrefix` |
+
+**Пример вызова:**
+
+```bash
+grpcurl your-domain.xyz:443 my_project.HealthService/Check
+```
+
+</details>
+
+<details>
 <summary>&emsp;🏗️&ensp;<b>Архитектура</b></summary>
 <br>
 
@@ -381,18 +421,18 @@ cd proto && make generate
                        ┌──────────┐
                        │  Client  │
                        └────┬─────┘
-                            │
+                            │ :443 (TLS)
                 ┌───────────┴───────────┐
                 │   Nginx  /  Traefik   │
                 │   SSL · CORS · Route  │
                 └──┬────────┬────────┬──┘
                    │        │        │
-          /api/v1/ │    /   │        │ :50052
+          /api/v1/ │    /   │        │ gRPC (h2c/grpc)
                    │        │        │
-            ┌──────┴───┐ ┌──┴──┐ ┌───┴───┐
-            │ Backend   │ │Front│ │ gRPC  │
-            │ (Go)      │ │end  │ │Server │
-            └─────┬─────┘ └─────┘ └───────┘
+            ┌──────┴───┐ ┌──┴──┐ ┌───┴───────┐
+            │ Backend   │ │Front│ │ Backend   │
+            │ HTTP:8080 │ │end  │ │ gRPC:50051│
+            └─────┬─────┘ └─────┘ └───────────┘
                   │
          ┌────────┴────────┐
          │                 │

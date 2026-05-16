@@ -146,7 +146,6 @@ POSTGRES_PORT=$(ask_port "PostgreSQL port" "5432")
 REDIS_PORT=$(ask_port "Redis port" "6379")
 BACKEND_PORT=$(ask_port "Backend HTTP port" "8080")
 GRPC_PORT=$(ask_port "gRPC internal port" "50051")
-GRPC_EXTERNAL_PORT=$(ask_port "gRPC external port" "50052")
 
 NGINX_PORT="8080"
 LETSENCRYPT_EMAIL=""
@@ -198,7 +197,7 @@ SUMMARY=$(cat <<EOF
   PostgreSQL     :$POSTGRES_PORT  (user: $POSTGRES_USER)
   Redis          :$REDIS_PORT
   Backend HTTP   :$BACKEND_PORT
-  gRPC           :$GRPC_PORT → :$GRPC_EXTERNAL_PORT
+  gRPC           :$GRPC_PORT (external via :443)
   Cleanup        $CLEANUP
 EOF
 )
@@ -257,6 +256,11 @@ fi
 # ─── Copy proxy configs ──────────────────────────────────────────────────
 if [[ "$PROXY_TYPE" == "nginx" ]]; then
     cp -r templates/nginx-app nginx-app
+    cp -r templates/ci_nginx ci_nginx
+
+    # Generate vhost config from template (same layout as asic_mon .ci/)
+    cp templates/ci_nginx/vhost.conf.tpl "ci_nginx/${PROJECT_DOMAIN}.conf"
+    rm -f ci_nginx/vhost.conf.tpl
 
     if [[ "$INCLUDE_BOT" == "y" ]]; then
         sed -i 's|# BOT_WEBHOOK_LOCATION|location /webhook/bot {\
@@ -343,6 +347,10 @@ if [[ "$PROXY_TYPE" == "nginx" ]]; then
     cp templates/envs/env.web.example .envs/.env.web.example
     cp templates/envs/env.web.example .envs/.env.web
     sed -i "s|LETSENCRYPT_EMAIL=changeme@example.com|LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}|" .envs/.env.web
+
+    cp templates/envs/ci_nginx.env.example ci_nginx/.env.example
+    cp templates/envs/ci_nginx.env.example ci_nginx/.env
+    sed -i "s|DEFAULT_EMAIL=changeme@example.com|DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}|" ci_nginx/.env
 fi
 
 if [[ "$PROXY_TYPE" == "traefik" ]]; then
@@ -376,7 +384,6 @@ find . -maxdepth 1 -mindepth 1 -not -name 'templates' -not -name 'setup.sh' -not
             -e "s|{{GO_MODULE}}|${GO_MODULE}|g" \
             -e "s|{{BACKEND_PORT}}|${BACKEND_PORT}|g" \
             -e "s|{{GRPC_PORT}}|${GRPC_PORT}|g" \
-            -e "s|{{GRPC_EXTERNAL_PORT}}|${GRPC_EXTERNAL_PORT}|g" \
             -e "s|{{POSTGRES_PORT}}|${POSTGRES_PORT}|g" \
             -e "s|{{REDIS_PORT}}|${REDIS_PORT}|g" \
             -e "s|{{NGINX_PORT}}|${NGINX_PORT}|g" \
@@ -436,12 +443,19 @@ if [[ "$PROXY_TYPE" == "traefik" ]]; then
      cd ci_traefik && docker compose up -d"
 fi
 
+if [[ "$PROXY_TYPE" == "nginx" ]]; then
+    NEXT_STEPS="$NEXT_STEPS
+
+  4. Start Nginx edge proxy:
+     cd ci_nginx && docker compose up -d --build"
+fi
+
 gum style --border rounded --border-foreground "#3B82F6" --padding "1 2" --margin "0 2" --foreground "#E4E4E7" "$NEXT_STEPS"
 
 echo ""
 
 ENDPOINTS="  API       https://${PROJECT_DOMAIN}/api/v1/healthcheck
-  gRPC      ${PROJECT_DOMAIN}:${GRPC_EXTERNAL_PORT}"
+  gRPC      ${PROJECT_DOMAIN}:443 (TLS)"
 if [[ "$INCLUDE_FRONTEND" == "y" ]]; then
     ENDPOINTS="  Frontend  https://${PROJECT_DOMAIN}/
 $ENDPOINTS"

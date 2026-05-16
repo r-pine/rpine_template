@@ -8,7 +8,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "{{GRPC_EXTERNAL_PORT}}:{{GRPC_EXTERNAL_PORT}}"
     volumes:
       - ./letsencrypt:/letsencrypt
       - ../traefik-app/traefik.yml:/etc/traefik/traefik.yml:ro
